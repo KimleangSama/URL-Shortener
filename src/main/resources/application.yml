@@ -1,0 +1,53 @@
+databaseUrl: ${BATCH_DATASOURCE_URL:postgresql://localhost:5432/demo}
+
+spring:
+  application:
+    name: URL-Shortener
+  data:
+    r2dbc:
+      repositories:
+        enabled: true
+
+spring.r2dbc:
+  url: r2dbc:${databaseUrl}
+  username: ${BATCH_DATABASE_USERNAME:postgres}
+  password: ${BATCH_DATABASE_PASSWORD:postgres}
+  pool:
+    enabled: true # Requires r2dbc-pool
+    initial-size: 5
+    min-idle: 5
+    max-size: 20
+    max-idle-time: 10m
+    max-life-time: 45m
+    validation-query: SELECT 1
+
+# REF: https://github.com/brettwooldridge/HikariCP?tab=readme-ov-file#gear-configuration-knobs-baby
+# Time in hikari is in millisecond
+spring.datasource.hikari:
+  jdbc-url: jdbc:${databaseUrl}
+  driver-class-name: org.postgresql.Driver
+  username: ${BATCH_DATABASE_USERNAME:postgres}
+  password: ${BATCH_DATABASE_PASSWORD:postgres}
+  pool-name: SpringBootHikariCP
+  maximum-pool-size: 20
+  minimum-idle: 5
+  idle-timeout: 600000 # 10min
+  max-lifetime: 2700000 # 45min
+  initialization-fail-timeout: 0
+
+spring.data.redis:
+  password: ${REDIS_PASSWORD:redispassword}
+  sentinel:
+    master: mymaster
+    nodes:
+      - localhost:26379
+      - localhost:26380
+      - localhost:26381
+  timeout: 1000ms
+  lettuce:
+    pool:
+      enabled: true
+      max-active: 20
+      max-idle: 20
+      min-idle: 5
+    shutdown-timeout: 200ms

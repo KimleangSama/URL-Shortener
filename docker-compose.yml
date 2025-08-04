@@ -1,0 +1,77 @@
+services:
+  postgres:
+    image: postgres:17.2
+    container_name: postgres
+    restart: on-failure
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-demo}
+      TZ: Asia/Phnom_Penh
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d ${POSTGRES_DB:-demo} -U ${POSTGRES_USER:-postgres}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    command: postgres -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all -c max_connections=200
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+  redis-master:
+    container_name: redis-master
+    image: 'bitnami/redis:latest'
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - REDIS_PASSWORD=redispassword
+    ports:
+      - "6379:6379"
+  redis-slave:
+    container_name: redis-slave
+    image: 'bitnami/redis:latest'
+    environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_PASSWORD=redispassword
+      - REDIS_MASTER_PASSWORD=redispassword
+    ports:
+      - "6380:6379"
+  redis-sentinel-1:
+    image: 'bitnami/redis-sentinel:latest'
+    container_name: sentinel-1
+    environment:
+      - REDIS_MASTER_SET=mymaster
+      - REDIS_MASTER_HOST=127.0.0.1
+      - REDIS_MASTER_PASSWORD=redispassword
+      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=10000
+    depends_on:
+      - redis-master
+      - redis-slave
+    ports:
+      - "26379:26379"
+  redis-sentinel-2:
+    image: 'bitnami/redis-sentinel:latest'
+    container_name: sentinel-2
+    environment:
+      - REDIS_MASTER_SET=mymaster
+      - REDIS_MASTER_HOST=127.0.0.1
+      - REDIS_MASTER_PASSWORD=redispassword
+      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=10000
+    depends_on:
+      - redis-master
+      - redis-slave
+    ports:
+      - "26380:26379"
+  redis-sentinel-3:
+    image: 'bitnami/redis-sentinel:latest'
+    container_name: sentinel-3
+    environment:
+      - REDIS_MASTER_SET=mymaster
+      - REDIS_MASTER_HOST=127.0.0.1
+      - REDIS_MASTER_PASSWORD=redispassword
+      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=10000
+    depends_on:
+      - redis-master
+      - redis-slave
+    ports:
+      - "26381:26379"
