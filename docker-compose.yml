@@ -18,6 +18,34 @@ services:
     command: postgres -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all -c max_connections=200
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: pgbouncer
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    ports:
+      - "6432:6432"
+    environment:
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DB_NAME: ${POSTGRES_DB:-demo}
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 100
+      DEFAULT_POOL_SIZE: 20
+    volumes:
+      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+  pgbouncer-exporter:
+    image: prometheuscommunity/pgbouncer-exporter
+    container_name: pgbouncer-exporter
+    restart: unless-stopped
+    depends_on:
+      - pgbouncer
+    environment:
+      PGBOUNCER_EXPORTER_CONNECTION_STRING: postgresql://metrics:metricspass@pgbouncer:6432/pgbouncer?sslmode=disable
+    ports:
+      - "9127:9127"
   redis-master:
     container_name: redis-master
     image: 'bitnami/redis:latest'

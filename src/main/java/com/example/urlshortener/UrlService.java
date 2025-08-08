@@ -57,6 +57,7 @@ public class UrlService {
                                                 .thenReturn(entity.getLongUrl())
                                 )
                 )
+                .doOnNext(url -> log.info("Retrieved long URL for short code: {}", url))
                 .flatMap(url ->
                         redisService.incrementClickCount(shortCode)
                                 .then(

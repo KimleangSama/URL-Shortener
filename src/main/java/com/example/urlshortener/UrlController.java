@@ -31,7 +31,7 @@ public class UrlController {
                 .flatMap(longUrl -> {
                     try {
                         URI uri = URI.create(longUrl); // May throw IllegalArgumentException
-                        exchange.getResponse().setStatusCode(HttpStatus.FOUND); // or MOVED_PERMANENTLY
+                        exchange.getResponse().setStatusCode(HttpStatus.OK); // or MOVED_PERMANENTLY
                         exchange.getResponse().getHeaders().setLocation(uri);
                         return exchange.getResponse().setComplete();
                     } catch (IllegalArgumentException e) {
