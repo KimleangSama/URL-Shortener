@@ -1,5 +1,8 @@
-package com.example.urlshortener;
+package com.example.urlshortener.services;
 
+import com.example.urlshortener.entities.UrlEntity;
+import com.example.urlshortener.repos.UrlRepository;
+import com.example.urlshortener.utils.Base62Encoder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker;
 import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
@@ -9,11 +12,8 @@ import reactor.core.publisher.Mono;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Random;
 
 @Slf4j
 @Service

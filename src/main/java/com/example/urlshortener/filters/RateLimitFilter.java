@@ -1,4 +1,4 @@
-package com.example.urlshortener;
+package com.example.urlshortener.filters;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;

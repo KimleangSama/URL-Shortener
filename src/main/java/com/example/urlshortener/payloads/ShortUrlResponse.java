@@ -1,6 +1,5 @@
-package com.example.urlshortener;
+package com.example.urlshortener.payloads;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;

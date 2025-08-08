@@ -1,4 +1,4 @@
-package com.example.urlshortener;
+package com.example.urlshortener.filters;
 
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.stereotype.Service;

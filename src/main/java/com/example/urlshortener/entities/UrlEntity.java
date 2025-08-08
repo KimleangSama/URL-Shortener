@@ -1,8 +1,7 @@
-package com.example.urlshortener;
+package com.example.urlshortener.entities;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.Instant;

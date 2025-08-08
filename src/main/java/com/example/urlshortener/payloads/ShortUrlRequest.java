@@ -1,4 +1,4 @@
-package com.example.urlshortener;
+package com.example.urlshortener.payloads;
 
 import lombok.*;
 

@@ -36,16 +36,6 @@ services:
     volumes:
       - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
       - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
-  pgbouncer-exporter:
-    image: prometheuscommunity/pgbouncer-exporter
-    container_name: pgbouncer-exporter
-    restart: unless-stopped
-    depends_on:
-      - pgbouncer
-    environment:
-      PGBOUNCER_EXPORTER_CONNECTION_STRING: postgresql://metrics:metricspass@pgbouncer:6432/pgbouncer?sslmode=disable
-    ports:
-      - "9127:9127"
   redis-master:
     container_name: redis-master
     image: 'bitnami/redis:latest'

@@ -1,6 +1,8 @@
-package com.example.urlshortener;
+package com.example.urlshortener.controllers;
 
-import lombok.RequiredArgsConstructor;
+import com.example.urlshortener.services.UrlService;
+import com.example.urlshortener.payloads.ShortUrlRequest;
+import com.example.urlshortener.payloads.ShortUrlResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -31,7 +33,7 @@ public class UrlController {
                 .flatMap(longUrl -> {
                     try {
                         URI uri = URI.create(longUrl); // May throw IllegalArgumentException
-                        exchange.getResponse().setStatusCode(HttpStatus.OK); // or MOVED_PERMANENTLY
+                        exchange.getResponse().setStatusCode(HttpStatus.MOVED_PERMANENTLY); // or MOVED_PERMANENTLY
                         exchange.getResponse().getHeaders().setLocation(uri);
                         return exchange.getResponse().setComplete();
                     } catch (IllegalArgumentException e) {
