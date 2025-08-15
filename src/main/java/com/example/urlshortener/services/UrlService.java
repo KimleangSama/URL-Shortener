@@ -2,18 +2,18 @@ package com.example.urlshortener.services;
 
 import com.example.urlshortener.entities.UrlEntity;
 import com.example.urlshortener.repos.UrlRepository;
+import com.example.urlshortener.services.producers.UrlClickCountProducerService;
 import com.example.urlshortener.utils.Base62Encoder;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker;
-import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
-import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
-
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker;
+import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
@@ -22,13 +22,17 @@ public class UrlService {
     private final RedisService redisService;
     private final Base62Encoder encoder;
     private final ReactiveCircuitBreaker reactiveCircuitBreaker;
+    private final UrlClickCountProducerService urlClickCountProducerService;
 
     public UrlService(UrlRepository urlRepository, RedisService redisService,
-                      Base62Encoder encoder, ReactiveCircuitBreakerFactory<?, ?> circuitBreakerFactory) {
+                      Base62Encoder encoder, ReactiveCircuitBreakerFactory<?, ?> circuitBreakerFactory,
+                      UrlClickCountProducerService urlClickCountProducerService
+    ) {
         this.urlRepository = urlRepository;
         this.redisService = redisService;
         this.encoder = encoder;
         this.reactiveCircuitBreaker = circuitBreakerFactory.create("urlServiceCircuitBreaker");
+        this.urlClickCountProducerService = urlClickCountProducerService;
     }
 
     public Mono<String> shortenUrl(String longUrl) {
@@ -50,24 +54,20 @@ public class UrlService {
 
     public Mono<String> getLongUrl(String shortCode) {
         Mono<String> logic = redisService.getUrl(shortCode)
-                .switchIfEmpty(
-                        urlRepository.findByShortCode(shortCode)
-                                .flatMap(entity ->
-                                        redisService.setUrl(shortCode, entity.getLongUrl(), Duration.ofDays(30))
-                                                .thenReturn(entity.getLongUrl())
-                                )
+                .doOnNext(entity -> {
+                    if (entity == null) {
+                        log.warn("Short code {} not found in Redis cache", shortCode);
+                    } else {
+                        log.info("Retrieved long URL from Redis for short code: {}", shortCode);
+                    }
+                })
+                .switchIfEmpty(urlRepository.findByShortCode(shortCode)
+                        .flatMap(entity -> redisService.setUrl(shortCode, entity.getLongUrl(), Duration.ofDays(30))
+                                .thenReturn(entity.getLongUrl())
+                        )
                 )
-                .doOnNext(url -> log.info("Retrieved long URL for short code: {}", url))
-                .flatMap(url ->
-                        redisService.incrementClickCount(shortCode)
-                                .then(
-                                        urlRepository.findByShortCode(shortCode)
-                                                .flatMap(entity -> {
-                                                    entity.setClickCount(entity.getClickCount() + 1);
-                                                    return urlRepository.save(entity);
-                                                })
-                                )
-                                .thenReturn(url)
+                .flatMap(url -> Mono.fromRunnable(() ->
+                        urlClickCountProducerService.produceIncrementClickCountUpdateToQueue(shortCode))
                 );
 
         return reactiveCircuitBreaker.run(logic, throwable -> {

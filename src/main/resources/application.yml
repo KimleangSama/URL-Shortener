@@ -7,6 +7,18 @@ spring:
     r2dbc:
       repositories:
         enabled: true
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: ${RABBITMQ_USERNAME:rabbitmq}
+    password: ${RABBITMQ_PASSWORD:rabbitmq}
+
+queue.url-shortener:
+  name: url-shortener
+  exchange-name: url-shortener-exchange
+  routing-key: url-shortener-routing-key
+  durable: true
+  auto-delete: false
 
 spring.r2dbc:
   url: r2dbc:${databaseUrl}
@@ -51,3 +63,26 @@ spring.data.redis:
       max-idle: 20
       min-idle: 5
     shutdown-timeout: 200ms
+load.test.enabled: ${LOAD_TEST_ENABLED:true}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info, health, prometheus, metrics
+  zipkin:
+    tracing:
+      endpoint: "http://localhost:9411/api/v2/spans"
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+  tracing:
+    sampling:
+      probability: 1.0
+    enabled: true

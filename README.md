@@ -3,7 +3,9 @@ To retrieve the password for the PostgreSQL user 'postgres',
 ```sql
 SELECT rolname, rolpassword FROM pg_authid WHERE rolname = 'postgres';
 ```
-
+```sql
+create extension pg_stat_statements;
+```
 ### Table
 ```sql
 CREATE TABLE urls
