@@ -1,13 +1,13 @@
 package com.example.urlshortener.services.consumers;
 
-import com.example.urlshortener.configs.props.RabbitMQProps;
+import com.example.urlshortener.configs.props.RabbitProps;
 import com.example.urlshortener.repos.UrlRepository;
 import com.example.urlshortener.services.RedisService;
 import com.rabbitmq.client.ConnectionFactory;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -18,24 +18,30 @@ import reactor.rabbitmq.ReceiverOptions;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UrlClickCountConsumerService {
     private final UrlRepository urlRepository;
     private final RedisService redisService;
-    private final RabbitMQProps rabbitMQProps;
+    private final RabbitProps rabbitProps;
+    private final ConnectionFactory connectionFactory;
+
+    public UrlClickCountConsumerService(
+            UrlRepository urlRepository,
+            RedisService redisService,
+            RabbitProps rabbitProps,
+            @Qualifier("customRabbitConnectionFactory") ConnectionFactory connectionFactory) {
+        this.urlRepository = urlRepository;
+        this.redisService = redisService;
+        this.rabbitProps = rabbitProps;
+        this.connectionFactory = connectionFactory;
+    }
 
     private Receiver receiver;
 
     @PostConstruct
     public void init() {
-        if (rabbitMQProps == null) {
-            throw new IllegalStateException("RabbitMQProps is not initialized");
+        if (rabbitProps == null) {
+            throw new IllegalStateException("RabbitProps is not initialized");
         }
-        ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setHost(rabbitMQProps.getHost());
-        connectionFactory.setPort(rabbitMQProps.getPort());
-        connectionFactory.setUsername(rabbitMQProps.getUsername());
-        connectionFactory.setPassword(rabbitMQProps.getPassword());
         this.receiver = RabbitFlux.createReceiver(new ReceiverOptions().connectionFactory(connectionFactory));
     }
 
@@ -47,7 +53,7 @@ public class UrlClickCountConsumerService {
 
     @EventListener(ContextRefreshedEvent.class)
     public void startConsuming() {
-        receiver.consumeAutoAck(rabbitMQProps.getQueueName())
+        receiver.consumeAutoAck(rabbitProps.getQueueName())
                 .limitRate(10)
                 .onBackpressureBuffer(100)
                 .flatMap(msg -> {

@@ -12,7 +12,9 @@ import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker;
 import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -54,21 +56,23 @@ public class UrlService {
 
     public Mono<String> getLongUrl(String shortCode) {
         Mono<String> logic = redisService.getUrl(shortCode)
-                .doOnNext(entity -> {
-                    if (entity == null) {
-                        log.warn("Short code {} not found in Redis cache", shortCode);
-                    } else {
-                        log.info("Retrieved long URL from Redis for short code: {}", shortCode);
-                    }
-                })
-                .switchIfEmpty(urlRepository.findByShortCode(shortCode)
-                        .flatMap(entity -> redisService.setUrl(shortCode, entity.getLongUrl(), Duration.ofDays(30))
-                                .thenReturn(entity.getLongUrl())
-                        )
+                .doOnNext(url -> log.info("Retrieved long URL from Redis for short code: {}", shortCode))
+                .switchIfEmpty(
+                        urlRepository.findByShortCode(shortCode)
+                                .flatMap(entity -> redisService.setUrl(shortCode, entity.getLongUrl(), Duration.ofDays(30))
+                                        .thenReturn(entity.getLongUrl())
+                                )
+                                .doOnSuccess(url -> {
+                                    if (url != null) {
+                                        log.info("Retrieved long URL from DB and cached for short code: {}", shortCode);
+                                    }
+                                })
                 )
-                .flatMap(url -> Mono.fromRunnable(() ->
-                        urlClickCountProducerService.produceIncrementClickCountUpdateToQueue(shortCode))
-                );
+                // If still empty after Redis + DB -> 404
+                .switchIfEmpty(Mono.error(new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Short code not found: " + shortCode)))
+                // Click count update (side effect, does not alter result)
+                .doOnNext(url -> urlClickCountProducerService.produceIncrementClickCountUpdateToQueue(shortCode));
 
         return reactiveCircuitBreaker.run(logic, throwable -> {
             log.warn("Fallback triggered due to: {}", throwable.toString());

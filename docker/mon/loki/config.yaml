@@ -1,11 +1,25 @@
 server:
   http_listen_port: 3100
+  log_level: debug
+
+auth_enabled: false
 
 memberlist:
   join_members:
     - loki:7946
 
-auth_enabled: false
+storage_config:
+  aws:
+    endpoint: http://minio:9000
+    bucketnames: loki
+    access_key_id: loki
+    secret_access_key: supersecret
+    insecure: true
+    s3forcepathstyle: true
+  tsdb_shipper:
+    active_index_directory: /loki/index
+    cache_location: /loki/index_cache
+    cache_ttl: 24h         # Can be increased for faster performance over longer query periods, uses more disk space
 
 schema_config:
   configs:
@@ -16,22 +30,36 @@ schema_config:
       index:
         prefix: index_
         period: 24h
-common:
-  path_prefix: /loki
-  replication_factor: 1
-  storage:
-    s3:
-      endpoint: minio:9000
-      insecure: true
-      bucketnames: loki-data
-      access_key_id: loki
-      secret_access_key: supersecret
-      s3forcepathstyle: true
-  ring:
-    kvstore:
-      store: memberlist
+
+limits_config:
+  allow_structured_metadata: true
+  ingestion_rate_mb: 16
+  ingestion_burst_size_mb: 32
+  max_cache_freshness_per_query: 10m
+  split_queries_by_interval: 15m
 
 ruler:
   storage:
+    type: s3
     s3:
+      endpoint: minio:9000
       bucketnames: loki-ruler
+      access_key_id: loki
+      secret_access_key: supersecret
+      insecure: true
+      s3forcepathstyle: true
+
+common:
+  path_prefix: /loki
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: memberlist
+  storage:
+    s3:
+      endpoint: minio:9000
+      bucketnames: loki
+      insecure: true
+      access_key_id: loki
+      secret_access_key: supersecret
+      s3forcepathstyle: true

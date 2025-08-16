@@ -63,7 +63,6 @@ spring.data.redis:
       max-idle: 20
       min-idle: 5
     shutdown-timeout: 200ms
-load.test.enabled: ${LOAD_TEST_ENABLED:true}
 
 management:
   endpoints:
@@ -86,3 +85,13 @@ management:
     sampling:
       probability: 1.0
     enabled: true
+
+logging:
+  pattern:
+    correlation: '[${spring.application.name:},%X{traceId:-},%X{spanId:-}] '
+  level:
+    com.keakimleang.urlshortener: TRACE
+    com.github.loki4j: DEBUG
+
+load.test.enabled: ${LOAD_TEST_ENABLED:true}
+logging.loki.url: ${LOKI_URL:http://localhost:3100/loki/api/v1/push}
