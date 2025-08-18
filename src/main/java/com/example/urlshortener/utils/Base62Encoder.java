@@ -8,11 +8,11 @@ import java.security.SecureRandom;
 public class Base62Encoder {
     private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final int BASE = 62;
-    private static final int CODE_LENGTH = 7;
+    private static final int CODE_LENGTH = 8;
     private static final SecureRandom random = new SecureRandom();
 
     public String generateCode() {
-        long MAX_VALUE = (long) Math.pow(62, 7);
+        long MAX_VALUE = (long) Math.pow(BASE, CODE_LENGTH);
         long value = nextRandomLong(MAX_VALUE);
         return encode(value);
     }

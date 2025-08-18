@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:17.5
+    image: postgres:17.6
     container_name: postgres
     restart: on-failure
     ports:
@@ -19,7 +19,7 @@ services:
       postgres 
         -c shared_preload_libraries=pg_stat_statements 
         -c pg_stat_statements.track=all 
-        -c max_connections=200
+        -c max_connections=50
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
   postgres-exporter:
@@ -87,6 +87,7 @@ services:
     environment:
       - REDIS_REPLICATION_MODE=master
       - REDIS_PASSWORD=redispassword
+    command: /opt/bitnami/scripts/redis/run.sh --maxmemory 1024mb
     ports:
       - "6379:6379"
     volumes:
@@ -159,8 +160,8 @@ services:
     restart: on-failure
     command: server /data --console-address :9001
     environment:
-      MINIO_ROOT_USER: loki
-      MINIO_ROOT_PASSWORD: supersecret
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
 #      MINIO_BROWSER: "off"
       MINIO_PROMETHEUS_AUTH_TYPE: public
     ports:
@@ -175,6 +176,7 @@ services:
     command: [ "-config.file=/etc/loki/config.yaml", "-config.expand-env=true" ]
     volumes:
       - ./docker/mon/loki/config.yaml:/etc/loki/config.yaml
+      - ./data/loki:/loki
     ports:
       - "3100:3100"
     depends_on:

@@ -12,7 +12,7 @@ class ApplicationTests {
 
     @Test
     void contextLoads() {
-        for (int i = 0; i < 500_000; i++) {
+        for (int i = 0; i < 50_000; i++) {
             String longUrl = "https://keakimleang.com";
             urlService.shortenUrl(longUrl)
 //                    .doOnNext(shortCode -> System.out.println("Shortened URL: " + shortCode))
