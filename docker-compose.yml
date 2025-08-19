@@ -155,7 +155,7 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-rabbitmq}
 
   minio:
-    image: bitnami/minio:2025.4.22
+    image: bitnami/minio:2025.7.23
     container_name: minio
     restart: on-failure
     entrypoint:
