@@ -109,7 +109,7 @@ services:
     container_name: sentinel-1
     environment:
       - REDIS_MASTER_SET=mymaster
-      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_HOST=${REDIS_MASTER_HOST:-localhost}
       - REDIS_MASTER_PASSWORD=redispassword
       - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=10000
     depends_on:
@@ -122,7 +122,7 @@ services:
     container_name: sentinel-2
     environment:
       - REDIS_MASTER_SET=mymaster
-      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_HOST=${REDIS_MASTER_HOST:-localhost}
       - REDIS_MASTER_PASSWORD=redispassword
       - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=10000
     depends_on:
@@ -135,7 +135,7 @@ services:
     container_name: sentinel-3
     environment:
       - REDIS_MASTER_SET=mymaster
-      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_HOST=${REDIS_MASTER_HOST:-localhost}
       - REDIS_MASTER_PASSWORD=redispassword
       - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=10000
     depends_on:
@@ -255,6 +255,8 @@ services:
       - "8080:8080"
     volumes:
       - ./logs:/logs
+    profiles:
+      - app
     environment:
       BATCH_DATASOURCE_URL: postgresql://pgbouncer-webflux:6432/demo
       BATCH_DATABASE_USERNAME: postgres

@@ -38,7 +38,7 @@ public class RabbitConfig {
 
     @Bean
     public Queue urlClickCountQueue() {
-        return new Queue(queueName, durable, false, autoDelete);
+        return new Queue(queueName, durable);
     }
 
     @Bean

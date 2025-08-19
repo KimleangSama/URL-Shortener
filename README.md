@@ -17,3 +17,5 @@ CREATE TABLE urls
     click_count BIGINT
 );
 ```
+
+If run app in Docker-Compose, use redis-master as redis host for sentinels.

@@ -54,7 +54,7 @@ public class UrlClickCountConsumerService {
                     log.info("Received message from queue: {}", shortCode);
                     return processMessage(shortCode)
                             .thenReturn(shortCode);
-                })
+                }, 10)
                 .doOnNext(shortCode -> log.info("Processed click count update for short code: {}", shortCode))
                 .doOnError(e -> log.error("Error consuming messages", e))
                 .subscribe(); // crucial!

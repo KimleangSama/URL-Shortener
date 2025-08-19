@@ -1,5 +1,6 @@
 databaseUrl: ${BATCH_DATASOURCE_URL:postgresql://localhost:6432/demo}
-
+server:
+  port: 8080
 spring:
   application:
     name: URL-Shortener
@@ -52,7 +53,7 @@ spring.data.redis:
   sentinel:
     master: mymaster
     nodes: ${REDIS_SENTINEL_NODES:localhost:26379,localhost:26380,localhost:26381}
-  timeout: 1000ms
+  timeout: 30000ms
   lettuce:
     pool:
       enabled: true
