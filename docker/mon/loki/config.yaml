@@ -30,7 +30,7 @@ query_range:
 
 schema_config:
   configs:
-    - from: 2024-04-01
+    - from: 2025-08-12
       store: tsdb
       object_store: s3
       schema: v13
@@ -42,7 +42,7 @@ storage_config:
   aws:
     s3: s3
     s3forcepathstyle: true
-    bucketnames: loki
+    bucketnames: loki-data
     endpoint: http://minio:9000
     access_key_id: admin
     secret_access_key: password123
@@ -83,14 +83,13 @@ chunk_store_config:
 
 ruler:
   storage:
-    type: local
-    local:
-      directory: /loki/rules
-  rule_path: /loki/rules
-  ring:
-    kvstore:
-      store: inmemory
-  enable_api: true
+    s3:
+      bucketnames: loki-ruler
+#  rule_path: /loki/rules
+#  ring:
+#    kvstore:
+#      store: inmemory
+#  enable_api: true
 
 # Analytics and usage reporting
 analytics:

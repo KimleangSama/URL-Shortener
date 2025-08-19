@@ -3,46 +3,39 @@ package com.example.urlshortener.services.consumers;
 import com.example.urlshortener.configs.props.RabbitProps;
 import com.example.urlshortener.repos.UrlRepository;
 import com.example.urlshortener.services.RedisService;
-import com.rabbitmq.client.ConnectionFactory;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.Receiver;
-import reactor.rabbitmq.ReceiverOptions;
 
 @Slf4j
 @Service
 public class UrlClickCountConsumerService {
+    private final Receiver receiver;
     private final UrlRepository urlRepository;
     private final RedisService redisService;
     private final RabbitProps rabbitProps;
-    private final ConnectionFactory connectionFactory;
 
     public UrlClickCountConsumerService(
             UrlRepository urlRepository,
             RedisService redisService,
             RabbitProps rabbitProps,
-            @Qualifier("customRabbitConnectionFactory") ConnectionFactory connectionFactory) {
+            Receiver receiver) {
         this.urlRepository = urlRepository;
         this.redisService = redisService;
         this.rabbitProps = rabbitProps;
-        this.connectionFactory = connectionFactory;
+        this.receiver = receiver;
     }
-
-    private Receiver receiver;
 
     @PostConstruct
     public void init() {
         if (rabbitProps == null) {
             throw new IllegalStateException("RabbitProps is not initialized");
         }
-        this.receiver = RabbitFlux.createReceiver(new ReceiverOptions().connectionFactory(connectionFactory));
     }
 
     @PreDestroy

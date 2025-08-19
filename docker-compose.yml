@@ -109,7 +109,7 @@ services:
     container_name: sentinel-1
     environment:
       - REDIS_MASTER_SET=mymaster
-      - REDIS_MASTER_HOST=127.0.0.1
+      - REDIS_MASTER_HOST=redis-master
       - REDIS_MASTER_PASSWORD=redispassword
       - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=10000
     depends_on:
@@ -122,7 +122,7 @@ services:
     container_name: sentinel-2
     environment:
       - REDIS_MASTER_SET=mymaster
-      - REDIS_MASTER_HOST=127.0.0.1
+      - REDIS_MASTER_HOST=redis-master
       - REDIS_MASTER_PASSWORD=redispassword
       - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=10000
     depends_on:
@@ -135,7 +135,7 @@ services:
     container_name: sentinel-3
     environment:
       - REDIS_MASTER_SET=mymaster
-      - REDIS_MASTER_HOST=127.0.0.1
+      - REDIS_MASTER_HOST=redis-master
       - REDIS_MASTER_PASSWORD=redispassword
       - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=10000
     depends_on:
@@ -158,11 +158,16 @@ services:
     image: bitnami/minio:2025.4.22
     container_name: minio
     restart: on-failure
-    command: server /data --console-address :9001
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        mkdir -p /data/loki-data && \
+        mkdir -p /data/loki-ruler && \
+        minio server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: password123
-#      MINIO_BROWSER: "off"
       MINIO_PROMETHEUS_AUTH_TYPE: public
     ports:
       - "9000:9000" # S3 API
@@ -229,3 +234,36 @@ services:
       - ./data/grafana:/var/lib/grafana
     ports:
       - "3000:3000"
+
+  myapp:
+    build:
+      context: .
+    container_name: myapp
+    restart: on-failure
+    depends_on:
+      - postgres
+      - pgbouncer-webflux
+      - redis-master
+      - redis-slave
+      - rabbitmq
+      - minio
+      - loki
+      - prometheus
+      - tempo
+      - pyroscope
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./logs:/logs
+    environment:
+      BATCH_DATASOURCE_URL: postgresql://pgbouncer-webflux:6432/demo
+      BATCH_DATABASE_USERNAME: postgres
+      BATCH_DATABASE_PASSWORD: postgres
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: rabbitmq
+      RABBITMQ_PASSWORD: rabbitmq
+      REDIS_SENTINEL_NODES: redis-sentinel-1:26379,redis-sentinel-2:26380,redis-sentinel-3:26381
+      REDIS_PASSWORD: redispassword
+      LOKI_URL: http://loki:3100/loki/api/v1/push
+      ZIPKIN_TRACING_ENDPOINT: http://tempo:9411/api/v2/spans
