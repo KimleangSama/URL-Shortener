@@ -175,7 +175,7 @@ services:
     volumes:
       - ./data/minio:/data
   loki:
-    image: grafana/loki:3.5.2
+    image: grafana/loki:3.5.4
     container_name: loki
     restart: on-failure
     command: [ "-config.file=/etc/loki/config.yaml", "-config.expand-env=true" ]
